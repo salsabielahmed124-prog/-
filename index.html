@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سكينة — دعم نفسي متاح للجميع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--ink:#12262b;--teal:#0f4c5c;--teal2:#1d6b7d;--mint:#d3ebe5;--bg:#f2f6f7;--card:#fff;--line:#d9e3e5;--free:#e0a33b;--mut:#5b7076}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif;line-height:1.7}
+header{background:var(--teal);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header b{font-size:22px}
+nav{display:flex;gap:6px;background:rgba(255,255,255,.12);padding:4px;border-radius:999px}
+nav button{border:0;background:none;color:#fff;padding:7px 16px;border-radius:999px;font:inherit;cursor:pointer}
+nav button.on{background:#fff;color:var(--teal);font-weight:700}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:28px;line-height:1.4;margin:10px 0 6px}
+h2{font-size:19px;margin:26px 0 10px}
+p.lead{color:var(--mut);margin:0 0 18px;max-width:60ch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+label{display:block;font-weight:500;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button.p,button.s{font:inherit;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--teal)}
+button.p{background:var(--teal);color:#fff}
+button.s{background:#fff;color:var(--teal)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--free);outline-offset:2px}
+.tag{display:inline-block;font-size:13px;padding:2px 10px;border-radius:999px;background:var(--mint);color:var(--teal)}
+.tag.free{background:#fbefd3;color:#7a5410}
+.ai{background:var(--mint);border-radius:12px;padding:14px;border-inline-start:5px solid var(--teal)}
+.mut{color:var(--mut);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;display:none}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <b>سكينة</b>
+  <nav id="nav" aria-label="تبديل الدور"></nav>
+</header>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<footer>نموذج تجريبي لمسابقة رواد الأعمال — البيانات المعروضة وهمية. في الحالات الطارئة اتصل بخدمات الطوارئ المحلية فورًا.</footer>
+
+<script>
+/* ===== Supabase (اختياري): املأ القيمتين من Project Settings > API ===== */
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+let sb = null;
+try { if (SUPABASE_URL && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
+
+/* ===== بيانات تجريبية (تُستبدل ببيانات Supabase عند الربط) ===== */
+const db = {
+  doctors: [
+    {id:1, name:'د. منى عادل', title:'استشارية طب نفسي', spec:['mood','assess'], price:300, free:true},
+    {id:2, name:'د. كريم سمير', title:'معالج إدمان', spec:['addiction'], price:350, free:true},
+    {id:3, name:'د. هالة فؤاد', title:'أخصائية علاج نفسي', spec:['mood','assess'], price:250, free:false},
+    {id:4, name:'د. أحمد يوسف', title:'استشاري أمراض عقلية', spec:['psychosis'], price:400, free:true}
+  ],
+  me: {intake:null, dx:'', meds:[], notes:[], sessions:[], inquiries:[]},
+  freeHours: 2
+};
+const L = {mood:'قلق أو اكتئاب أو ضغط نفسي', addiction:'إدمان', psychosis:'أعراض عقلية (هلاوس أو شكوك قوية)', unsure:'مش متأكد'};
+let role = 'patient';
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast = m => { const t = $('#toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); };
+
+async function loadDoctors() {
+  if (!sb) return;
+  const {data} = await sb.from('doctors').select('*');
+  if (data && data.length) { db.doctors = data.map(d => ({id:d.id, name:d.name, title:d.title, spec:d.specialties, price:d.price, free:d.free_now})); render(); }
+}
+
+/* ===== الدخول إلى الأدوار ===== */
+function setRole(r) { role = r; render(); window.scrollTo(0, 0); }
+function renderNav() {
+  const items = [['patient','مريض'],['doctor','دكتور'],['pharmacist','صيدلي إكلينيكي']];
+  $('#nav').innerHTML = items.map(([k,v]) => `<button class="${role===k?'on':''}" onclick="setRole('${k}')">${v}</button>`).join('');
+}
+
+/* ===== المريض ===== */
+function patientView() {
+  const m = db.me;
+  if (!m.intake) return `
+    <h1>ابدأ بخطوة صغيرة</h1>
+    <p class="lead">أجب عن بضعة أسئلة ليفهم الطبيب حالتك قبل أول جلسة، ونقترح عليك الأطباء الأنسب. بياناتك لا يراها غير طبيبك.</p>
+    <div class="box">
+      <label for="q1">ما الذي تحتاج مساعدة فيه؟</label>
+      <select id="q1">${Object.entries(L).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+      <label for="q2">هل تم تشخيصك من قبل؟</label>
+      <select id="q2" onchange="$('#prev').style.display=this.value==='yes'?'block':'none'"><option value="no">لا</option><option value="yes">نعم</option></select>
+      <div id="prev" style="display:none"><label for="q2b">التشخيص السابق</label><input id="q2b"></div>
+      <label for="q3">منذ متى بدأت المشكلة؟</label>
+      <select id="q3"><option>أقل من شهر</option><option>من 1 إلى 6 شهور</option><option>أكثر من 6 شهور</option></select>
+      <label for="q4">الأدوية الحالية (إن وجدت)</label>
+      <input id="q4" placeholder="مثال: سيرترالين 50 مجم">
+      <p><button class="p" onclick="submitIntake()">اعرض الأطباء المناسبين</button></p>
+    </div>`;
+  const i = m.intake;
+  const best = db.doctors.filter(d => d.spec.includes(i.type === 'unsure' ? 'assess' : i.type));
+  const rest = db.doctors.filter(d => !best.includes(d));
+  const card = (d, rec) => `<div class="box">
+      <b>${d.name}</b> ${rec ? '<span class="tag">مناسب لحالتك</span>' : ''}
+      <div class="mut">${d.title}</div>
+      <p>${d.free ? '<span class="tag free">متاح الآن لجلسة مجانية</span>' : '<span class="mut">لا توجد ساعات مجانية الآن</span>'}</p>
+      <div class="row">
+        <button class="p" onclick="book(${d.id},true)" ${d.free ? '' : 'disabled style="opacity:.4"'}>جلسة مجانية الآن</button>
+        <button class="s" onclick="book(${d.id},false)">احجز بـ ${d.price} ج</button>
+      </div></div>`;
+  return `
+    <h1>أهلًا بك</h1>
+    <div class="ai"><b>ملخص ملفك (يصل للطبيب قبل أول جلسة)</b><p>${esc(summary(i))}</p></div>
+    <h2>الأطباء المقترحون</h2>
+    <div class="grid">${best.map(d => card(d, true)).join('') || '<p class="mut">لا يوجد تخصص مطابق حاليًا.</p>'}</div>
+    <h2>أطباء آخرون</h2>
+    <div class="grid">${rest.map(d => card(d, false)).join('')}</div>
+    <h2>جلساتي</h2>
+    ${m.sessions.map(s => `<div class="box">${s.doc} — ${s.free ? 'مجانية' : 'مدفوعة'}</div>`).join('') || '<p class="mut">لا توجد جلسات بعد.</p>'}
+    <h2>اسأل الصيدلي الإكلينيكي عن دوائك</h2>
+    <div class="box"><textarea id="inq" rows="2" placeholder="مثال: هل أتناول الدواء قبل الأكل أم بعده؟"></textarea>
+    <p><button class="p" onclick="sendInq()">أرسل السؤال</button></p>
+    ${m.inquiries.map(q => `<p><b>سؤالك:</b> ${esc(q.q)}<br><span class="mut">${q.a ? 'الصيدلي: ' + esc(q.a) : 'بانتظار الرد'}</span></p>`).join('')}</div>`;
+}
+function summary(i) {
+  return `يشتكي من ${L[i.type]} منذ ${i.dur}. ` + (i.prev ? `تشخيص سابق: ${i.prev}. ` : 'لم يُشخَّص من قبل، ويُنصح بتقييم أولي. ') + `الأدوية الحالية: ${i.meds || 'لا يوجد'}.`;
+}
+async function submitIntake() {
+  const i = {type:$('#q1').value, prev:$('#q2').value === 'yes' ? ($('#q2b').value || 'غير محدد') : '', dur:$('#q3').value, meds:$('#q4').value};
+  db.me.intake = i;
+  if (i.meds) db.me.meds.push({name:i.meds, by:'المريض'});
+  if (sb) await sb.from('intake_answers').insert({answers:i});
+  render();
+}
+function book(id, free) {
+  const d = db.doctors.find(x => x.id === id);
+  db.me.sessions.push({doc:d.name, free});
+  toast(free ? 'جاري تحويلك لغرفة الجلسة المجانية' : 'تم الحجز، سنرسل لك التأكيد');
+  render();
+}
+function sendInq() { const v = $('#inq').value.trim(); if (!v) return; db.me.inquiries.push({q:v, a:''}); render(); toast('وصل سؤالك للصيدلي'); }
+
+/* ===== الدكتور ===== */
+function doctorView() {
+  const m = db.me, i = m.intake;
+  return `
+    <h1>لوحة الدكتورة منى عادل</h1>
+    <p class="lead">جلساتك المدفوعة تظهر للمرضى بحسب الحجز، وساعاتك المجانية تفتح لك باب الوصول لمرضى جدد.</p>
+    <div class="box row"><div><b>ساعات الجلسات المجانية أسبوعيًا</b><div class="mut">تُعرض لزوار المنصة بدون حجز مسبق</div></div>
+      <select id="fh" style="width:90px" onchange="db.freeHours=+this.value;toast('تم حفظ الساعات')">${[1,2,3,4,5,6].map(n => `<option ${n===db.freeHours?'selected':''}>${n}</option>`).join('')}</select></div>
+    <h2>مريض: حالة تجريبية</h2>
+    ${i ? `<div class="ai"><b>ملخص ما قبل الجلسة</b><p>${esc(summary(i))}</p></div>` : '<p class="mut">لم يُكمل أي مريض الاستبيان بعد. جرّب من واجهة المريض.</p>'}
+    ${i ? `<div class="box">
+      <label for="dx">التشخيص</label><input id="dx" value="${esc(m.dx)}">
+      <label for="med">إضافة دواء</label><input id="med" placeholder="الاسم والجرعة">
+      <label for="note">ملاحظة الجلسة</label><textarea id="note" rows="2"></textarea>
+      <p><button class="p" onclick="saveRecord()">احفظ في ملف المريض</button></p>
+      <div class="mut">ملاحظات سابقة:</div>${m.notes.map(n => `<p>• ${esc(n)}</p>`).join('') || '<p class="mut">لا يوجد.</p>'}</div>` : ''}`;
+}
+function saveRecord() {
+  const m = db.me;
+  m.dx = $('#dx').value;
+  if ($('#med').value) m.meds.push({name:$('#med').value, by:'الطبيب'});
+  if ($('#note').value) m.notes.push($('#note').value);
+  toast('تم الحفظ'); render();
+}
+
+/* ===== الصيدلي الإكلينيكي ===== */
+function pharmView() {
+  const m = db.me;
+  return `
+    <h1>لوحة الصيدلي الإكلينيكي</h1>
+    <p class="lead">راجع ملفات المرضى، تابع أدويتهم، وردّ على استفساراتهم.</p>
+    <h2>حالة تجريبية</h2>
+    ${m.intake ? `<div class="box"><b>التشخيص:</b> ${esc(m.dx || 'لم يُحدَّد بعد')}
+      <p><b>الأدوية:</b></p>${m.meds.map(d => `<p>• ${esc(d.name)} <span class="tag">${d.by}</span></p>`).join('') || '<p class="mut">لا يوجد.</p>'}</div>` : '<p class="mut">لا توجد ملفات بعد.</p>'}
+    <h2>استفسارات المرضى</h2>
+    ${m.inquiries.map((q, k) => `<div class="box"><b>${esc(q.q)}</b>
+      ${q.a ? `<p class="mut">ردّك: ${esc(q.a)}</p>` : `<textarea id="a${k}" rows="2" placeholder="اكتب الرد"></textarea><p><button class="p" onclick="reply(${k})">أرسل الرد</button></p>`}</div>`).join('') || '<p class="mut">لا توجد استفسارات.</p>'}`;
+}
+function reply(k) { const v = $('#a' + k).value.trim(); if (!v) return; db.me.inquiries[k].a = v; toast('تم إرسال الرد'); render(); }
+
+function render() {
+  renderNav();
+  $('#app').innerHTML = role === 'patient' ? patientView() : role === 'doctor' ? doctorView() : pharmView();
+}
+render(); loadDoctors();
+</script>
+</body>
+</html>
