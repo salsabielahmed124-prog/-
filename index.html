@@ -82,7 +82,26 @@ let sb=null;try{if(SUPABASE_URL&&window.supabase)sb=window.supabase.createClient
 const L={mood:'قلق أو اكتئاب أو ضغط نفسي',addiction:'دعم في الإدمان',psychosis:'أعراض عقلية (هلاوس أو شكوك قوية)',unsure:'مش متأكد'};
 const ROLE={patient:'مريض',doctor:'أخصائي',pharm:'صيدلي إكلينيكي',admin:'إدارة المنصة'};
 const SLOTS=['اليوم 6:00 م','غدًا 11:00 ص','غدًا 4:00 م'];
-const S={role:null,tab:'home',open:null,intake:null,dx:'',meds:[],notes:[],plan:'',sessions:[],reqs:[],queries:[],notif:[],freeHours:2,
+const S={role:null,tab:'home',open:null,sel:null,
+ get intake(){return this.pts[0].intake},set intake(v){this.pts[0].intake=v},
+ get dx(){return this.pts[0].dx},set dx(v){this.pts[0].dx=v},
+ get plan(){return this.pts[0].plan},set plan(v){this.pts[0].plan=v},
+ get meds(){return this.pts[0].meds},get notes(){return this.pts[0].notes},
+ pts:[
+  {id:0,name:'مريض تجريبي (أنت)',age:'',intake:null,dx:'',meds:[],notes:[],plan:'',hist:[]},
+  {id:1,name:'سارة محمود',age:29,dx:'اضطراب القلق العام',intake:{type:'mood',prev:'اضطراب القلق العام',dur:'أكثر من 6 شهور',meds:'سيرترالين 50 مجم',pref:'حجز مع أخصائي محدد',safety:'لا'},
+   meds:[{n:'سيرترالين 50 مجم، مرة صباحًا',by:'الأخصائي'},{n:'هيدروكسيزين 25 مجم عند اللزوم',by:'الأخصائي'}],notes:[],plan:'جلسة كل أسبوعين وتمارين تنفس يوميًا، ومراجعة الدواء بعد 6 أسابيع.',
+   hist:[{d:'2026-11-02',t:'تحسن في النوم، وقلق أقل في العمل.'},{d:'2026-10-05',t:'بدء سيرترالين وشرح الآثار الجانبية الشائعة.'},{d:'2026-09-14',t:'جلسة تقييم أولي: قلق مستمر وتوتر عضلي.'}]},
+  {id:2,name:'يوسف عمر',age:34,dx:'اضطراب استخدام مواد، تعافٍ مبكر',intake:{type:'addiction',prev:'اضطراب استخدام مواد',dur:'أكثر من 6 شهور',meds:'نالتريكسون 50 مجم',pref:'جلسة مجانية بدون حجز',safety:'لا'},
+   meds:[{n:'نالتريكسون 50 مجم، مرة يوميًا',by:'الأخصائي'}],notes:[],plan:'جلسات أسبوعية، ومجموعة دعم، ومتابعة الالتزام بالدواء مع الصيدلي.',
+   hist:[{d:'2026-11-08',t:'ملتزم بالجلسات، ورغبة أقل في الانتكاس.'},{d:'2026-10-11',t:'بدء خطة التعافي وتحديد المحفزات.'}]},
+  {id:3,name:'ليلى حسن',age:41,dx:'اكتئاب متوسط الشدة',intake:{type:'mood',prev:'اكتئاب',dur:'من 1 إلى 6 شهور',meds:'إسيتالوبرام 10 مجم',pref:'جلسة مجانية بدون حجز',safety:'أحيانًا'},
+   meds:[{n:'إسيتالوبرام 10 مجم، مرة صباحًا',by:'الأخصائي'},{n:'ميرتازابين 15 مجم قبل النوم',by:'الأخصائي'}],notes:[],plan:'متابعة أسبوعية، وتقييم السلامة في كل جلسة، وزيادة النشاط اليومي تدريجيًا.',
+   hist:[{d:'2026-11-10',t:'مزاج أفضل قليلًا، ولا تزال تعاني من الإرهاق.'},{d:'2026-10-20',t:'إضافة ميرتازابين بسبب اضطراب النوم.'},{d:'2026-10-02',t:'جلسة أولى مجانية ثم تحويل لمتابعة منتظمة.'}]},
+  {id:4,name:'محمد خالد',age:23,dx:'اضطراب ذهاني قيد التقييم',intake:{type:'psychosis',prev:'',dur:'أقل من شهر',meds:'',pref:'حجز مع أخصائي محدد',safety:'لا'},
+   meds:[{n:'أولانزابين 5 مجم قبل النوم',by:'الأخصائي'}],notes:[],plan:'تقييم شامل خلال أسبوعين، وإشراك الأسرة بموافقته، ومتابعة الآثار الجانبية للدواء.',
+   hist:[{d:'2026-11-12',t:'نوم أفضل، وأفكار الشك أخف.'},{d:'2026-11-06',t:'جلسة تقييم عاجلة وبدء العلاج الدوائي.'}]}],
+ sessions:[],reqs:[],queries:[],notif:[],freeHours:2,
  doctors:[
   {id:1,name:'د. منى عادل',title:'استشارية طب نفسي',spec:['mood','assess'],price:300,free:true},
   {id:2,name:'د. كريم سمير',title:'معالج إدمان',spec:['addiction'],price:350,free:true},
@@ -107,9 +126,9 @@ function land(){
  return `<div class="wrap"><div class="top"><div class="logo">Mindora</div><button class="btn" onclick="go('login')">ابدأ الآن</button></div>
  <div class="hero"><div><h1>Your Mental Wellbeing, Within Reach.</h1>
   <p>منصة تربطك بالأخصائي المناسب لحالتك، مع جلسات مجانية بدون حجز ومتابعة دوائية من صيدلي إكلينيكي.</p>
-  <p><button class="btn" onclick="go('login')">جرّب النموذج</button> <button class="btn o" onclick="enter('patient');tab('docs')">تصفّح الأخصائيين</button></p></div>
+  <p><button class="btn" onclick="go('login')">جرّب النموذج</button> <button class="btn o" onclick="enter('patient');tab('docs')">تصفّح الأخصائيين</button></p>${ILL}</div>
   <div class="live"><h3><span class="pulse"></span> متاحون الآن لجلسة مجانية</h3>
-   ${fr.map(d=>`<div class="drow"><div><b>${d.name}</b><div class="mut">${d.title}</div></div><button class="btn sm" onclick="enter('patient');tab('free')">اطلب جلسة</button></div>`).join('')}</div></div></div>
+   ${fr.map(d=>`<div class="drow"><div style="display:flex;gap:10px;align-items:center">${av(d.id,40)}<div><b>${d.name}</b><div class="mut">${d.title}</div></div></div><button class="btn sm" onclick="enter('patient');tab('free')">اطلب جلسة</button></div>`).join('')}</div></div></div>
  <div class="sec"><div class="wrap"><h2>إزاي بتشتغل؟</h2><p>أربع خطوات من أول تسجيل لحد المتابعة.</p>
   <div class="steps"><div><b>سجّل وأجب عن التقييم</b><br>أسئلة قصيرة تصل للأخصائي قبل أول جلسة.</div><div><b>اختر طريقك</b><br>جلسة مجانية الآن، أو حجز مدفوع مع أخصائي تختاره.</div><div><b>قابل الأخصائي</b><br>ملفك الخاص يظهر له هو فقط.</div><div><b>تابع دواءك</b><br>الصيدلي الإكلينيكي يرد على أسئلتك.</div></div></div></div>
  <div class="sec band"><div class="wrap"><h2>الجلسات المجانية: مكسب للطرفين</h2><p>الأخصائي يخصص ساعات أسبوعية مجانية ويحصل في المقابل على ظهور وتسويق من المنصة.</p>
@@ -122,13 +141,13 @@ function land(){
  <footer>Mindora نموذج تجريبي لمسابقة ريادة الأعمال. البيانات وهمية، وليست خدمة طبية فعلية.</footer>`}
 
 function login(){
- const R=[['patient','مريض','سجّل، أجب عن التقييم، واطلب جلسة.'],['doctor','أخصائي','استقبل الطلبات وسجّل ملاحظاتك.'],['pharm','صيدلي إكلينيكي','تابع الأدوية ورد على الاستفسارات.'],['admin','إدارة المنصة','راجع الأرقام ووثّق الأخصائيين.']];
+ const R=[['patient','مريض','سجّل، أجب عن التقييم، واطلب جلسة.'],['doctor','أخصائي','استقبل الطلبات وسجّل ملاحظاتك.'],['pharm','صيدلي إكلينيكي','تابع الأدوية ورد على الاستفسارات.'],['admin','إدارة المنصة','راجع الأرقام ووثّق الأخصائيين.'],['demo','مريضة بملف جاهز','ادخل بملف فيه سجل مرضي وأدوية.']];
  return `<div class="wrap"><div class="top"><div class="logo">Mindora</div><button class="btn o" onclick="go('land')">رجوع</button></div>
  <h1 style="font-size:30px">ادخل بحساب تجريبي</h1><p class="mut">اختر دورًا لتجربة المنصة. لا يوجد تسجيل دخول حقيقي في هذا النموذج.</p>
- <div class="roles">${R.map(r=>`<button onclick="enter('${r[0]}')"><h3>${r[1]}</h3><span class="mut">${r[2]}</span></button>`).join('')}</div></div>`}
+ <div class="roles">${R.map(r=>`<button onclick="${r[0]==='demo'?'demoPatient()':`enter('${r[0]}')`}"><h3>${r[1]}</h3><span class="mut">${r[2]}</span></button>`).join('')}</div></div>`}
 
 /* ===== القالب العام للوحات ===== */
-const NAV={patient:[['home','الرئيسية'],['assess','التقييم الأولي'],['docs','الأخصائيون'],['free','جلسة مجانية'],['sess','جلساتي'],['meds','أدويتي'],['notif','الإشعارات']],
+const NAV={patient:[['home','الرئيسية'],['assess','التقييم الأولي'],['docs','الأخصائيون'],['free','جلسة مجانية'],['sess','جلساتي'],['hist','سجلي الصحي'],['meds','أدويتي'],['notif','الإشعارات']],
  doctor:[['home','طلبات الجلسات'],['hours','ساعاتي المجانية'],['pt','ملف المريض'],['notif','الإشعارات']],
  pharm:[['home','الاستفسارات'],['rec','سجل الأدوية'],['notif','الإشعارات']],
  admin:[['home','نظرة عامة'],['ver','طلبات التوثيق']]};
@@ -142,7 +161,7 @@ const notifView=()=>`<h2>الإشعارات</h2>${S.notif.filter(x=>x.r===S.role
 
 /* ===== المريض ===== */
 function drCard(d,rec){
- return `<div class="card"><div class="row"><div><b>${d.name}</b> ${rec?'<span class="tag g">قد يناسب احتياجك</span>':''}<div class="mut">${d.title}</div></div>
+ return `<div class="card"><div class="row"><div style="display:flex;gap:12px;align-items:center">${av(d.id,48)}<div><b>${d.name}</b> ${rec?'<span class="tag g">قد يناسب احتياجك</span>':''}<div class="mut">${d.title}</div></div></div>
  ${d.free?'<span class="tag f">متاح الآن مجانًا</span>':''}</div>
  <p class="row"><button class="btn sm" onclick="S.open=${d.id};render()">احجز جلسة (${d.price} ج)</button>${d.free?`<button class="btn o sm" onclick="reqFree(${d.id})">اطلب جلسة مجانية</button>`:''}</p>
  ${S.open===d.id?`<div class="ai"><b>اختر موعدًا</b><p class="row">${SLOTS.map(s=>`<button class="btn o sm" onclick="book(${d.id},'${s}')">${s}</button>`).join('')}</p><span class="mut">الدفع غير مفعّل، واجهة توضيحية فقط.</span></div>`:''}</div>`}
@@ -210,6 +229,33 @@ function sendInq(){const v=$('#inq').value.trim();if(!v)return;S.queries.push({q
 function rep(k){const v=$('#a'+k).value.trim();if(!v)return;S.queries[k].a=v;note('patient','رد الصيدلي على استفسارك');toast('تم الرد');render()}
 function fwd(k){S.queries[k].fw=true;note('doctor','صيدلي أحال إليك استفسارًا دوائيًا');toast('تمت الإحالة');render()}
 function verify(id,ok){const p=S.pending.find(x=>x.id===id);S.pending=S.pending.filter(x=>x.id!==id);if(ok)S.doctors.push(p);toast(ok?'تم توثيق الأخصائي':'تم الرفض');render()}
+
+/* ===== صور ورسومات (SVG مدمجة) ===== */
+const AVC=['#6b4fbb','#1f9e9a','#c26a8a','#d99a2b','#4f7bbb'];
+const av=(id,s=44)=>{const c=AVC[id%5];return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" aria-hidden="true" style="flex:none"><circle cx="24" cy="24" r="24" fill="${c}" opacity=".18"/><circle cx="24" cy="19" r="8" fill="${c}"/><path d="M8 42c2-9 9-13 16-13s14 4 16 13a24 24 0 0 1-32 0z" fill="${c}"/></svg>`};
+const ILL=`<svg viewBox="0 0 420 220" role="img" aria-label="رسم يوضح محادثة دعم نفسي" style="width:100%;height:auto;margin-top:22px"><rect width="420" height="220" rx="22" fill="#ece7f8"/><circle cx="350" cy="38" r="58" fill="#d9f1ef"/><rect x="36" y="24" width="150" height="54" rx="18" fill="#fff"/><path d="M78 78l-6 16 22-16z" fill="#fff"/><circle cx="78" cy="51" r="5" fill="#6b4fbb"/><circle cx="103" cy="51" r="5" fill="#6b4fbb" opacity=".6"/><circle cx="128" cy="51" r="5" fill="#6b4fbb" opacity=".3"/><rect x="236" y="56" width="150" height="54" rx="18" fill="#1f9e9a"/><path d="M346 110l6 16-22-16z" fill="#1f9e9a"/><path d="M262 76h98M262 92h60" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="92" cy="138" r="22" fill="#6b4fbb"/><path d="M52 220c2-38 20-58 40-58s38 20 40 58z" fill="#6b4fbb"/><circle cx="328" cy="152" r="20" fill="#563c9e"/><path d="M292 220c2-34 16-52 36-52s34 18 36 52z" fill="#563c9e"/><path d="M212 178c-12-9-20-16-20-25a11 11 0 0 1 20-6 11 11 0 0 1 20 6c0 9-8 16-20 25z" fill="#f0b44c"/></svg>`;
+function demoPatient(){const p=JSON.parse(JSON.stringify(S.pts[1]));p.id=0;S.pts[0]=p;S.sessions=[{doc:'د. منى عادل',slot:'غدًا 11:00 ص',price:300}];enter('patient');S.tab='hist';render()}
+
+/* ===== السجلات المرضية ===== */
+const plist=()=>S.pts.filter((p,k)=>k?true:(p.intake&&!S.pts.slice(1).some(x=>x.name===p.name)));
+function recBody(p,full){
+ return `${p.intake?`<div class="ai"><b>ملخص التقييم الأولي</b><p>${esc(summary(p.intake))}</p></div>`:''}
+ <div class="card"><b>التشخيص:</b> ${esc(p.dx||'لم يُحدَّد بعد')}</div>
+ <div class="card"><b>الأدوية</b>${p.meds.map(m=>`<p class="row" style="margin:6px 0"><span>${esc(m.n)}</span><span class="tag">سجّلها ${m.by}</span></p>`).join('')||'<p class="mut">لا توجد أدوية مسجلة.</p>'}</div>
+ ${p.plan?`<div class="ai"><b>خطة المتابعة</b><p>${esc(p.plan)}</p></div>`:''}
+ <div class="card"><b>السجل المرضي</b>${p.hist.map(h=>`<p style="margin:8px 0"><span class="tag">${h.d}</span> ${esc(h.t)}</p>`).join('')||'<p class="mut">لا يوجد سجل بعد.</p>'}</div>`}
+V.patient.hist=()=>`<h2>سجلي الصحي</h2>${safeBox()}<p class="mut">بيانات وهمية للعرض. ملفك لا يراه غير أخصائيك والصيدلي المتابع.</p>${recBody(S.pts[0])}`;
+V.doctor.pt=()=>{
+ const L2=plist(),p=L2.find(x=>x.id===S.sel);
+ if(!p)return `<h2>مرضاي</h2><p class="mut">بيانات وهمية للعرض فقط. اختر مريضًا لفتح ملفه.</p>`+L2.map(x=>`<button class="card row" style="width:100%;text-align:right;background:#fff;cursor:pointer" onclick="S.sel=${x.id};render()"><span style="display:flex;gap:12px;align-items:center">${av(x.id,44)}<span><b>${x.name}</b><br><span class="mut">${x.age?x.age+' سنة — ':''}${esc(x.dx||'بدون تشخيص بعد')}</span></span></span><span class="tag">${x.meds.length} أدوية</span></button>`).join('');
+ return `<p><button class="btn o sm" onclick="S.sel=null;render()">رجوع للقائمة</button></p><h2 style="display:flex;gap:12px;align-items:center">${av(p.id,52)}${p.name}</h2>${recBody(p)}
+ <div class="card"><b>تحديث الملف</b><label for="dx">التشخيص</label><input id="dx" value="${esc(p.dx)}"><label for="md">إضافة دواء</label><input id="md" placeholder="الاسم والجرعة">
+ <label for="nt">ملاحظة الجلسة</label><textarea id="nt" rows="2"></textarea><label for="pl">خطة المتابعة</label><textarea id="pl" rows="2">${esc(p.plan)}</textarea>
+ <p><button class="btn" onclick="saveRec()">احفظ في الملف</button></p></div>`};
+V.pharm.rec=()=>`<h2>سجل الأدوية</h2><p class="mut">بيانات وهمية. يظهر للصيدلي التشخيص والأدوية والخطة فقط، دون ملاحظات الجلسات.</p>`+plist().map(p=>`<div class="card"><div class="row"><span style="display:flex;gap:10px;align-items:center">${av(p.id,40)}<b>${p.name}</b></span><span class="tag">${esc(p.dx||'لم يُحدَّد')}</span></div>${p.meds.map(m=>`<p class="row" style="margin:6px 0"><span>${esc(m.n)}</span><span class="tag">${m.by}</span></p>`).join('')||'<p class="mut">لا أدوية.</p>'}${p.plan?`<p class="mut">الخطة: ${esc(p.plan)}</p>`:''}</div>`).join('')+'<p class="mut">الصيدلي لا يعدّل التشخيص أو الوصفة، ويحوّل ما يحتاج قرارًا للطبيب.</p>';
+function saveRec(){const p=S.pts.find(x=>x.id===S.sel)||S.pts[0],n=$('#nt').value.trim(),m=$('#md').value.trim();
+ p.dx=$('#dx').value;if(m)p.meds.push({n:m,by:'الأخصائي'});if(n)p.hist.unshift({d:'اليوم',t:n});p.plan=$('#pl').value;
+ if(p.id===0&&(m||p.plan)){note('patient','تم تحديث ملفك وخطة المتابعة');note('pharm','أدوية جديدة مسجلة للمتابعة')}toast('تم الحفظ');render()}
 
 function render(){$('#app').innerHTML=view==='land'?land():view==='login'?login():shell()}
 render();loadDoctors();
