@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mindora — دعم نفسي أقرب إليك</title>
+<title>سكون — دعم نفسي أقرب إليك</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2716%27 fill=%27%236b4fbb%27/%3E%3Cpath d=%27M7 19c3-4 6-4 9 0s6 4 9 0%27 stroke=%27%23fff%27 stroke-width=%272.4%27 fill=%27none%27 stroke-linecap=%27round%27/%3E%3Ccircle cx=%2716%27 cy=%2711%27 r=%273%27 fill=%27%23f0b44c%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500&family=Readex+Pro:wght@500;600&display=swap" rel="stylesheet">
@@ -16,8 +17,9 @@ h1,h2,h3,.logo{font-family:'Readex Pro','IBM Plex Sans Arabic',sans-serif;font-w
 button{font:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--free);outline-offset:2px}
 .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
-.logo{font-size:22px;color:var(--v2);display:flex;align-items:center;gap:8px;direction:ltr}
-.logo::before{content:"";width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--t))}
+.logo{font-size:24px;color:var(--v2);display:flex;align-items:center;gap:10px}
+.banner svg{display:block;width:100%;height:auto;border-radius:22px}
+.banner{margin-top:6px}
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
 .btn{border:0;background:var(--v);color:#fff;padding:10px 22px;border-radius:12px;font-weight:500}
 .btn:hover{background:var(--v2)}
@@ -25,7 +27,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .btn.sm{padding:6px 14px;font-size:14px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:36px 0 56px}
-.hero h1{font-size:40px;direction:ltr;text-align:right}
+.hero h1{font-size:40px;text-align:right}
 .hero p{color:var(--mut);max-width:48ch;font-size:18px}
 .live{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 18px 40px -24px rgba(86,60,158,.45)}
 .live h3{font-size:17px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -123,10 +125,10 @@ async function loadDoctors(){if(!sb)return;try{const {data}=await sb.from('docto
 /* ===== الصفحة الرئيسية ===== */
 function land(){
  const fr=S.doctors.filter(d=>d.free);
- return `<div class="wrap"><div class="top"><div class="logo">Mindora</div><button class="btn" onclick="go('login')">ابدأ الآن</button></div>
- <div class="hero"><div><h1>Your Mental Wellbeing, Within Reach.</h1>
+ return `<div class="wrap"><div class="top"><div class="logo">${LOGO}سكون</div><button class="btn" onclick="go('login')">ابدأ الآن</button></div>
+ <div class="banner">${BAN}</div><div class="hero"><div><h1>سلامتك النفسية، أقرب إليك.</h1>
   <p>منصة تربطك بالأخصائي المناسب لحالتك، مع جلسات مجانية بدون حجز ومتابعة دوائية من صيدلي إكلينيكي.</p>
-  <p><button class="btn" onclick="go('login')">جرّب النموذج</button> <button class="btn o" onclick="enter('patient');tab('docs')">تصفّح الأخصائيين</button></p>${ILL}</div>
+  <p><button class="btn" onclick="go('login')">جرّب النموذج</button> <button class="btn o" onclick="enter('patient');tab('docs')">تصفّح الأخصائيين</button></p></div>
   <div class="live"><h3><span class="pulse"></span> متاحون الآن لجلسة مجانية</h3>
    ${fr.map(d=>`<div class="drow"><div style="display:flex;gap:10px;align-items:center">${av(d.id,40)}<div><b>${d.name}</b><div class="mut">${d.title}</div></div></div><button class="btn sm" onclick="enter('patient');tab('free')">اطلب جلسة</button></div>`).join('')}</div></div></div>
  <div class="sec"><div class="wrap"><h2>إزاي بتشتغل؟</h2><p>أربع خطوات من أول تسجيل لحد المتابعة.</p>
@@ -138,11 +140,11 @@ function land(){
   <details><summary>مين يشوف بياناتي؟</summary><p class="mut">أنت وأخصائيك، والصيدلي للمعلومات الدوائية اللازمة للمتابعة فقط.</p></details>
   <details><summary>هل الدفع شغال؟</summary><p class="mut">لا، في النموذج التجريبي الدفع واجهة توضيحية فقط.</p></details>
   <details><summary>هل المنصة بديل للطوارئ؟</summary><p class="mut">لا. في الخطر الفوري اتصل بالطوارئ المحلية.</p></details></div></div>
- <footer>Mindora نموذج تجريبي لمسابقة ريادة الأعمال. البيانات وهمية، وليست خدمة طبية فعلية.</footer>`}
+ <footer>سكون نموذج تجريبي لمسابقة ريادة الأعمال. البيانات وهمية، وليست خدمة طبية فعلية.</footer>`}
 
 function login(){
  const R=[['patient','مريض','سجّل، أجب عن التقييم، واطلب جلسة.'],['doctor','أخصائي','استقبل الطلبات وسجّل ملاحظاتك.'],['pharm','صيدلي إكلينيكي','تابع الأدوية ورد على الاستفسارات.'],['admin','إدارة المنصة','راجع الأرقام ووثّق الأخصائيين.'],['demo','مريضة بملف جاهز','ادخل بملف فيه سجل مرضي وأدوية.']];
- return `<div class="wrap"><div class="top"><div class="logo">Mindora</div><button class="btn o" onclick="go('land')">رجوع</button></div>
+ return `<div class="wrap"><div class="top"><div class="logo">${LOGO}سكون</div><button class="btn o" onclick="go('land')">رجوع</button></div>
  <h1 style="font-size:30px">ادخل بحساب تجريبي</h1><p class="mut">اختر دورًا لتجربة المنصة. لا يوجد تسجيل دخول حقيقي في هذا النموذج.</p>
  <div class="roles">${R.map(r=>`<button onclick="${r[0]==='demo'?'demoPatient()':`enter('${r[0]}')`}"><h3>${r[1]}</h3><span class="mut">${r[2]}</span></button>`).join('')}</div></div>`}
 
@@ -153,7 +155,7 @@ const NAV={patient:[['home','الرئيسية'],['assess','التقييم الأ
  admin:[['home','نظرة عامة'],['ver','طلبات التوثيق']]};
 function shell(){
  const n=S.notif.filter(x=>x.r===S.role).length;
- return `<div class="shell"><aside><div class="logo">Mindora</div><p class="role">${ROLE[S.role]}</p>
+ return `<div class="shell"><aside><div class="logo">${LOGO}سكون</div><p class="role">${ROLE[S.role]}</p>
  ${NAV[S.role].map(([k,v])=>`<button class="${S.tab===k?'on':''}" onclick="tab('${k}')">${v}${k==='notif'&&n?` <span class="dot">${n}</span>`:''}</button>`).join('')}
  <button onclick="go('land')">خروج</button></aside><section class="main">${(V[S.role][S.tab]||V[S.role].home)()}</section></div>`}
 const safeBox=()=>S.intake&&S.intake.safety!=='لا'?`<div class="warn"><b>سلامتك أهم شيء.</b> لو في خطر الآن، اتصل بالطوارئ المحلية أو بشخص قريب منك فورًا. وتقدر تطلب جلسة مجانية الآن.</div>`:'';
@@ -233,6 +235,8 @@ function verify(id,ok){const p=S.pending.find(x=>x.id===id);S.pending=S.pending.
 /* ===== صور ورسومات (SVG مدمجة) ===== */
 const AVC=['#6b4fbb','#1f9e9a','#c26a8a','#d99a2b','#4f7bbb'];
 const av=(id,s=44)=>{const c=AVC[id%5];return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" aria-hidden="true" style="flex:none"><circle cx="24" cy="24" r="24" fill="${c}" opacity=".18"/><circle cx="24" cy="19" r="8" fill="${c}"/><path d="M8 42c2-9 9-13 16-13s14 4 16 13a24 24 0 0 1-32 0z" fill="${c}"/></svg>`};
+const LOGO=`<svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b4fbb"/><stop offset="1" stop-color="#1f9e9a"/></linearGradient></defs><circle cx="16" cy="16" r="16" fill="url(#lg)"/><path d="M6.5 19.5c3.2-4.2 6.4-4.2 9.5 0s6.300 4.200 9.500 0" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="16" cy="10.5" r="3" fill="#f0b44c"/></svg>`;
+const BAN=`<svg viewBox="0 0 1000 300" role="img" aria-label="رسم لجلسة دعم نفسي هادئة"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ece7f8"/><stop offset="1" stop-color="#d9f1ef"/></linearGradient></defs><rect width="1000" height="300" fill="url(#bg)"/><circle cx="840" cy="78" r="44" fill="#fff" opacity=".85"/><circle cx="150" cy="60" r="22" fill="#fff" opacity=".6"/><path d="M0 218c140-50 280-50 420-10s300 40 580-30v122H0z" fill="#bfe3de"/><path d="M0 256c200-40 380-30 560 0s300 10 440-20v64H0z" fill="#6b4fbb" opacity=".28"/><rect x="290" y="46" width="140" height="46" rx="16" fill="#fff"/><path d="M340 92l-6 14 20-14z" fill="#fff"/><circle cx="338" cy="69" r="5" fill="#6b4fbb"/><circle cx="360" cy="69" r="5" fill="#6b4fbb" opacity=".6"/><circle cx="382" cy="69" r="5" fill="#6b4fbb" opacity=".3"/><rect x="580" y="70" width="150" height="46" rx="16" fill="#1f9e9a"/><path d="M670 116l6 14-20-14z" fill="#1f9e9a"/><path d="M600 86h106M600 100h64" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="380" cy="162" r="26" fill="#6b4fbb"/><path d="M338 276c0-50 18-74 42-74s42 24 42 74z" fill="#6b4fbb"/><circle cx="620" cy="176" r="26" fill="#563c9e"/><path d="M578 276c0-50 18-74 42-74s42 24 42 74z" fill="#563c9e"/><path d="M500 262c-12-30-8-52 0-66 8 14 12 36 0 66z" fill="#1f9e9a"/><path d="M500 262c16-18 30-24 44-24-8 16-22 26-44 24z" fill="#34b3ae"/><path d="M500 262c-16-18-30-24-44-24 8 16 22 26 44 24z" fill="#34b3ae"/><path d="M500 186c-8-6-13-10-13-16a7 7 0 0 1 13-4 7 7 0 0 1 13 4c0 6-5 10-13 16z" fill="#f0b44c"/></svg>`;
 const ILL=`<svg viewBox="0 0 420 220" role="img" aria-label="رسم يوضح محادثة دعم نفسي" style="width:100%;height:auto;margin-top:22px"><rect width="420" height="220" rx="22" fill="#ece7f8"/><circle cx="350" cy="38" r="58" fill="#d9f1ef"/><rect x="36" y="24" width="150" height="54" rx="18" fill="#fff"/><path d="M78 78l-6 16 22-16z" fill="#fff"/><circle cx="78" cy="51" r="5" fill="#6b4fbb"/><circle cx="103" cy="51" r="5" fill="#6b4fbb" opacity=".6"/><circle cx="128" cy="51" r="5" fill="#6b4fbb" opacity=".3"/><rect x="236" y="56" width="150" height="54" rx="18" fill="#1f9e9a"/><path d="M346 110l6 16-22-16z" fill="#1f9e9a"/><path d="M262 76h98M262 92h60" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="92" cy="138" r="22" fill="#6b4fbb"/><path d="M52 220c2-38 20-58 40-58s38 20 40 58z" fill="#6b4fbb"/><circle cx="328" cy="152" r="20" fill="#563c9e"/><path d="M292 220c2-34 16-52 36-52s34 18 36 52z" fill="#563c9e"/><path d="M212 178c-12-9-20-16-20-25a11 11 0 0 1 20-6 11 11 0 0 1 20 6c0 9-8 16-20 25z" fill="#f0b44c"/></svg>`;
 function demoPatient(){const p=JSON.parse(JSON.stringify(S.pts[1]));p.id=0;S.pts[0]=p;S.sessions=[{doc:'د. منى عادل',slot:'غدًا 11:00 ص',price:300}];enter('patient');S.tab='hist';render()}
 
