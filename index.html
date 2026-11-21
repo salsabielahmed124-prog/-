@@ -36,7 +36,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(prefers-reduced-motion:reduce){.pulse{animation:none}}
 .drow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .sec{padding:44px 0}
-.sec h2{font-size:28px;margin-bottom:8px}
+.sec h2{font-size:28px;margin-bottom:18px}
 .sec>.wrap>p{color:var(--mut);max-width:60ch;margin:0 0 24px}
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;counter-reset:s}
 .steps div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;counter-increment:s}
@@ -70,7 +70,11 @@ input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);b
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
 .stats b{display:block;font:600 28px 'Readex Pro',sans-serif;color:var(--v2)}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;display:none;z-index:9}
-@media(max-width:760px){.hero{grid-template-columns:1fr}.hero h1{font-size:30px}.shell{grid-template-columns:1fr}aside{flex-direction:row;overflow-x:auto;border:0;border-bottom:1px solid var(--line)}aside .logo,aside .role{display:none}aside button{white-space:nowrap}}
+.mbar{display:none;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.burger{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px;color:var(--v2);display:grid;place-items:center}
+.ad{margin:24px 0;text-align:center}.ad span{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}.adcard{display:flex;flex-wrap:wrap;gap:14px;align-items:center;text-align:right;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}.adcard .t{font-weight:600}.adcard small{display:block;color:var(--mut);font-size:13px;line-height:1.6}
+.adbox{border:1px dashed var(--line);border-radius:14px;min-height:90px;display:grid;place-items:center;color:var(--mut);background:#fff}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.hero h1{font-size:30px}.shell{grid-template-columns:1fr}.mbar{display:flex}aside{display:none;border:0;border-bottom:1px solid var(--line)}aside.open{display:flex}aside .logo{display:none}}
 </style>
 </head>
 <body>
@@ -117,8 +121,8 @@ const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setT
 const note=(r,t)=>S.notif.unshift({r,t});
 const doc=id=>S.doctors.find(d=>d.id===id);
 function go(v){view=v;render();scrollTo(0,0)}
-function enter(r){S.role=r;S.tab='home';view='app';render();scrollTo(0,0)}
-function tab(t){S.tab=t;S.open=null;render()}
+function enter(r){S.role=r;S.tab='home';S.menu=false;view='app';render();scrollTo(0,0)}
+function tab(t){S.tab=t;S.open=null;S.menu=false;render()}
 function summary(i){return `يشتكي من ${L[i.type]} منذ ${i.dur}. `+(i.prev?`تشخيص سابق: ${i.prev}. `:'لم يُشخَّص من قبل، ويُنصح بتقييم أولي. ')+`الأدوية الحالية: ${i.meds||'لا يوجد'}. يفضّل: ${i.pref}.`}
 async function loadDoctors(){if(!sb)return;try{const {data}=await sb.from('doctors').select('*');if(data&&data.length){S.doctors=data.map(d=>({id:d.id,name:d.name,title:d.title,spec:d.specialties,price:d.price,free:d.free_now}));render()}}catch(e){}}
 
@@ -131,22 +135,24 @@ function land(){
   <p><button class="btn" onclick="go('login')">جرّب النموذج</button> <button class="btn o" onclick="enter('patient');tab('docs')">تصفّح الأخصائيين</button></p></div>
   <div class="live"><h3><span class="pulse"></span> متاحون الآن لجلسة مجانية</h3>
    ${fr.map(d=>`<div class="drow"><div style="display:flex;gap:10px;align-items:center">${av(d.id,40)}<div><b>${d.name}</b><div class="mut">${d.title}</div></div></div><button class="btn sm" onclick="enter('patient');tab('free')">اطلب جلسة</button></div>`).join('')}</div></div></div>
- <div class="sec"><div class="wrap"><h2>إزاي بتشتغل؟</h2><p>أربع خطوات من أول تسجيل لحد المتابعة.</p>
+ <div class="wrap">${ad('top')}</div>
+ <div class="sec"><div class="wrap"><h2>إزاي بتشتغل؟</h2>
   <div class="steps"><div><b>سجّل وأجب عن التقييم</b><br>أسئلة قصيرة تصل للأخصائي قبل أول جلسة.</div><div><b>اختر طريقك</b><br>جلسة مجانية الآن، أو حجز مدفوع مع أخصائي تختاره.</div><div><b>قابل الأخصائي</b><br>ملفك الخاص يظهر له هو فقط.</div><div><b>تابع دواءك</b><br>الصيدلي الإكلينيكي يرد على أسئلتك.</div></div></div></div>
- <div class="sec band"><div class="wrap"><h2>الجلسات المجانية: مكسب للطرفين</h2><p>الأخصائي يخصص ساعات أسبوعية مجانية ويحصل في المقابل على ظهور وتسويق من المنصة.</p>
+ <div class="sec band"><div class="wrap"><h2>الجلسات المجانية: مكسب للطرفين</h2>
   <div class="two"><div><h3>للمريض</h3><p>تدخل في أي وقت، تشوف مين متاح، وتطلب استشارة بدون حجز ولا تكلفة.</p></div><div><h3>للأخصائي</h3><p>يحدد ساعاته بنفسه، ويقدم جلسات مدفوعة بجانبها، ويوصل لمرضى أكتر.</p></div></div></div></div>
  <div class="sec"><div class="wrap"><h2>أسئلة شائعة</h2><br>
   <details><summary>هل الترشيح تشخيص؟</summary><p class="mut">لا. الترشيح مساعدة لاختيار التخصص المناسب، والتشخيص من اختصاص الأخصائي فقط.</p></details>
   <details><summary>مين يشوف بياناتي؟</summary><p class="mut">أنت وأخصائيك، والصيدلي للمعلومات الدوائية اللازمة للمتابعة فقط.</p></details>
   <details><summary>هل الدفع شغال؟</summary><p class="mut">لا، في النموذج التجريبي الدفع واجهة توضيحية فقط.</p></details>
   <details><summary>هل المنصة بديل للطوارئ؟</summary><p class="mut">لا. في الخطر الفوري اتصل بالطوارئ المحلية.</p></details></div></div>
+ <div class="wrap">${ad('mid')}</div>
  <footer>سكون نموذج تجريبي لمسابقة ريادة الأعمال. البيانات وهمية، وليست خدمة طبية فعلية.</footer>`}
 
 function login(){
  const R=[['patient','مريض','سجّل، أجب عن التقييم، واطلب جلسة.'],['doctor','أخصائي','استقبل الطلبات وسجّل ملاحظاتك.'],['pharm','صيدلي إكلينيكي','تابع الأدوية ورد على الاستفسارات.'],['admin','إدارة المنصة','راجع الأرقام ووثّق الأخصائيين.'],['demo','مريضة بملف جاهز','ادخل بملف فيه سجل مرضي وأدوية.']];
  return `<div class="wrap"><div class="top"><div class="logo">${LOGO}سكون</div><button class="btn o" onclick="go('land')">رجوع</button></div>
- <h1 style="font-size:30px">ادخل بحساب تجريبي</h1><p class="mut">اختر دورًا لتجربة المنصة. لا يوجد تسجيل دخول حقيقي في هذا النموذج.</p>
- <div class="roles">${R.map(r=>`<button onclick="${r[0]==='demo'?'demoPatient()':`enter('${r[0]}')`}"><h3>${r[1]}</h3><span class="mut">${r[2]}</span></button>`).join('')}</div></div>`}
+ <h1 style="font-size:30px">ادخل بحساب تجريبي</h1>
+ <div class="roles">${R.map(r=>`<button onclick="${r[0]==='demo'?'demoPatient()':`enter('${r[0]}')`}"><h3>${r[1]}</h3><span class="mut">${r[2]}</span></button>`).join('')}</div>${ad('login')}</div>`}
 
 /* ===== القالب العام للوحات ===== */
 const NAV={patient:[['home','الرئيسية'],['assess','التقييم الأولي'],['docs','الأخصائيون'],['free','جلسة مجانية'],['sess','جلساتي'],['hist','سجلي الصحي'],['meds','أدويتي'],['notif','الإشعارات']],
@@ -155,7 +161,7 @@ const NAV={patient:[['home','الرئيسية'],['assess','التقييم الأ
  admin:[['home','نظرة عامة'],['ver','طلبات التوثيق']]};
 function shell(){
  const n=S.notif.filter(x=>x.r===S.role).length;
- return `<div class="shell"><aside><div class="logo">${LOGO}سكون</div><p class="role">${ROLE[S.role]}</p>
+ return `<div class="shell"><div class="mbar"><div class="logo">${LOGO}سكون</div><button class="burger" aria-label="القائمة" aria-expanded="${!!S.menu}" onclick="toggleMenu()"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="${S.menu?'M6 6l12 12M18 6L6 18':'M4 7h16M4 12h16M4 17h16'}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button></div><aside class="${S.menu?'open':''}"><div class="logo">${LOGO}سكون</div><p class="role">${ROLE[S.role]}</p>
  ${NAV[S.role].map(([k,v])=>`<button class="${S.tab===k?'on':''}" onclick="tab('${k}')">${v}${k==='notif'&&n?` <span class="dot">${n}</span>`:''}</button>`).join('')}
  <button onclick="go('land')">خروج</button></aside><section class="main">${(V[S.role][S.tab]||V[S.role].home)()}</section></div>`}
 const safeBox=()=>S.intake&&S.intake.safety!=='لا'?`<div class="warn"><b>سلامتك أهم شيء.</b> لو في خطر الآن، اتصل بالطوارئ المحلية أو بشخص قريب منك فورًا. وتقدر تطلب جلسة مجانية الآن.</div>`:'';
@@ -261,7 +267,22 @@ function saveRec(){const p=S.pts.find(x=>x.id===S.sel)||S.pts[0],n=$('#nt').valu
  p.dx=$('#dx').value;if(m)p.meds.push({n:m,by:'الأخصائي'});if(n)p.hist.unshift({d:'اليوم',t:n});p.plan=$('#pl').value;
  if(p.id===0&&(m||p.plan)){note('patient','تم تحديث ملفك وخطة المتابعة');note('pharm','أدوية جديدة مسجلة للمتابعة')}toast('تم الحفظ');render()}
 
-function render(){$('#app').innerHTML=view==='land'?land():view==='login'?login():shell()}
+/* ===== الإعلانات =====
+   لتفعيل Google AdSense: ضعي رقم الناشر في client (مثال 'ca-pub-123...') وأرقام الوحدات في slots.
+   sample:true يعرض إعلانات تجريبية للعرض، وعند تفعيل الإعلانات الحقيقية اجعليها false. */
+const ADS={client:'',slots:{top:'',mid:'',login:''},sample:true,placeholder:true};
+const SAMPLES=[
+ {t:'اسم المنتج الدوائي (مثال)',d:'منتج بدون وصفة طبية. إعلان توضيحي لشكل المساحة الإعلانية.'},
+ {t:'فيتامينات ومكملات (مثال)',d:'اسم الشركة المعلنة يظهر هنا. إعلان توضيحي فقط.'}];
+const PILL='<svg width="52" height="52" viewBox="0 0 56 56" aria-hidden="true" style="flex:none"><g transform="rotate(-35 28 28)"><rect x="5" y="20" width="46" height="16" rx="8" fill="#6b4fbb"/><path d="M13 20h15v16H13a8 8 0 0 1 0-16z" fill="#1f9e9a"/></g></svg>';
+function ad(k){
+ if(ADS.client&&ADS.slots[k])return `<div class="ad"><span>إعلان</span><ins class="adsbygoogle" style="display:block" data-ad-client="${ADS.client}" data-ad-slot="${ADS.slots[k]}" data-ad-format="auto" data-full-width-responsive="true"></ins></div>`;
+ if(ADS.sample){const a=SAMPLES[k==='mid'?1:0];return `<div class="ad"><span>إعلان تجريبي</span><div class="adcard">${PILL}<div style="flex:1;min-width:180px"><div class="t">${a.t}</div><small>${a.d}</small><small>استشر الطبيب أو الصيدلي قبل استخدام أي دواء أو مكمل.</small></div><button class="btn o sm" onclick="toast('هذا إعلان تجريبي')">اعرف أكثر</button></div></div>`}
+ return ADS.placeholder?'<div class="ad"><span>إعلان</span><div class="adbox">مساحة إعلانية</div></div>':''}
+function runAds(){if(!ADS.client)return;document.querySelectorAll('ins.adsbygoogle:not([data-done])').forEach(e=>{e.dataset.done=1;try{(window.adsbygoogle=window.adsbygoogle||[]).push({})}catch(x){}})}
+if(ADS.client){const sc=document.createElement('script');sc.async=true;sc.crossOrigin='anonymous';sc.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADS.client;document.head.appendChild(sc)}
+function toggleMenu(){S.menu=!S.menu;render()}
+function render(){$('#app').innerHTML=view==='land'?land():view==='login'?login():shell();runAds()}
 render();loadDoctors();
 </script>
 </body>
